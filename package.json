@@ -1,0 +1,35 @@
+{
+  "name": "cloudpostoffice",
+  "version": "1.2.1",
+  "description": "NodeJS SDK for communicating with cloudpostoffice.com",
+  "main": "index.js",
+  "module": "index.mjs",
+  "exports": {
+    ".": {
+      "import": "./index.mjs",
+      "require": "./index.js"
+    }
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "test": "node test/run-all.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CloudPostOffice/nodejs.git"
+  },
+  "author": "Kishore",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/CloudPostOffice/nodejs/issues"
+  },
+  "homepage": "https://CloudPostOffice.com",
+  "devDependencies": {
+    "jest": "^29.7.0"
+  },
+  "dependencies": {
+    "mqtt": "^5.15.1"
+  }
+}
