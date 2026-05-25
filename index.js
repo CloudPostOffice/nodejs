@@ -1,59 +1,59 @@
 'use strict';
 
-const Device = require('./lib/Device');
+const Postbox = require('./lib/Postbox');
 
 let _options = { baseUrl: 'https://cloudpostoffice.com' };
-let _defaultDevice = null;
+let _defaultPostbox = null;
 
 /**
- * Create a device handle. Automatically authenticates and connects to the
+ * Create a postbox handle. Automatically authenticates and connects to the
  * MQTT broker on first use — no manual setup required.
  *
- * The first device created becomes the default for top-level
+ * The first postbox created becomes the default for top-level
  * cpo.publish() / cpo.subscribe() calls.
  *
- * @param   {string} deviceId
- * @param   {string} deviceSecret
- * @returns {Device}
+ * @param   {string} postboxId
+ * @param   {string} postboxSecret
+ * @returns {Postbox}
  *
  * @example
- * const d1 = cpo.device('my-device-id', 'my-secret');
- * await d1.send({ to: 'other-device', msg: 'hello' });
+ * const d1 = cpo.postbox('my-postbox-id', 'my-secret');
+ * await d1.send({ to: 'other-postbox', msg: 'hello' });
  * await d1.listen(msg => console.log(msg));
  */
-function device(deviceId, deviceSecret) {
-  if (!deviceId || !deviceSecret) {
-    throw new Error('device() requires both a deviceId and a deviceSecret');
+function postbox(postboxId, postboxSecret) {
+  if (!postboxId || !postboxSecret) {
+    throw new Error('postbox() requires both a postboxId and a postboxSecret');
   }
-  const d = new Device(deviceId, deviceSecret, _options);
-  if (!_defaultDevice) _defaultDevice = d;
+  const d = new Postbox(postboxId, postboxSecret, _options);
+  if (!_defaultPostbox) _defaultPostbox = d;
   return d;
 }
 
 /**
- * Publish a message to a named topic using the default device.
+ * Publish a message to a named topic using the default postbox.
  *
  * @param {string} topicName
  * @param {any}    message
  */
 function publish(topicName, message) {
-  if (!_defaultDevice) throw new Error('Call cpo.device() before cpo.publish()');
-  return _defaultDevice.publish(topicName, message);
+  if (!_defaultPostbox) throw new Error('Call cpo.postbox() before cpo.publish()');
+  return _defaultPostbox.publish(topicName, message);
 }
 
 /**
- * Subscribe to a named topic using the default device.
+ * Subscribe to a named topic using the default postbox.
  *
  * @param {string}   topicName
  * @param {Function} callback  fn(message, topicName)
  */
 function subscribe(topicName, callback) {
-  if (!_defaultDevice) throw new Error('Call cpo.device() before cpo.subscribe()');
-  return _defaultDevice.subscribe(topicName, callback);
+  if (!_defaultPostbox) throw new Error('Call cpo.postbox() before cpo.subscribe()');
+  return _defaultPostbox.subscribe(topicName, callback);
 }
 
 /**
- * Override SDK-level options (call before creating any devices).
+ * Override SDK-level options (call before creating any postboxes).
  *
  * @param {{ baseUrl?: string }} options
  */
@@ -68,4 +68,4 @@ function configure(options = {}) {
   Object.assign(_options, options);
 }
 
-module.exports = { device, publish, subscribe, configure };
+module.exports = { postbox, publish, subscribe, configure };

@@ -1,9 +1,9 @@
 'use strict';
 
 /**
- * Tests that a legitimate device CANNOT publish to topics outside its project.
+ * Tests that a legitimate postbox CANNOT publish to topics outside its project.
  * 
- * Authenticates as device-1 (gets a real JWT), then connects with a raw MQTT
+ * Authenticates as postbox-1 (gets a real JWT), then connects with a raw MQTT
  * client and tries to publish to a fake topic that is outside the allowed ACL.
  * 
  * Expected result: EMQX rejects the publish and disconnects the client.
@@ -11,23 +11,23 @@
  * 
  * Usage:
  *   CPO_BASE_URL=https://cloudpostoffice.com \
- *   CPO_TEST_DEVICE_1_ID=proj-xxxx--device-1 \
- *   CPO_TEST_DEVICE_1_SECRET=your-secret \
+ *   CPO_TEST_POSTBOX_1_ID=proj-xxxx--postbox-1 \
+ *   CPO_TEST_POSTBOX_1_SECRET=your-secret \
  *   node test/unauth-publish.js
  */
 
 const mqtt = require('mqtt');
 
-const BASE_URL   = process.env.CPO_BASE_URL   || 'http://localhost:3000';
-const DEVICE_ID  = process.env.CPO_TEST_DEVICE_1_ID;
-const DEVICE_SECRET = process.env.CPO_TEST_DEVICE_1_SECRET;
+const BASE_URL    = process.env.CPO_BASE_URL    || 'http://localhost:3000';
+const POSTBOX_ID  = process.env.CPO_TEST_POSTBOX_1_ID;
+const POSTBOX_SECRET = process.env.CPO_TEST_POSTBOX_1_SECRET;
 
-if (!DEVICE_ID || !DEVICE_SECRET) {
-  console.error('Set CPO_TEST_DEVICE_1_ID and CPO_TEST_DEVICE_1_SECRET');
+if (!POSTBOX_ID || !POSTBOX_SECRET) {
+  console.error('Set CPO_TEST_POSTBOX_1_ID and CPO_TEST_POSTBOX_1_SECRET');
   process.exit(1);
 }
 
-const FAKE_TOPIC = 'fake-account/fake-project/devices/victim-device';
+const FAKE_TOPIC = 'fake-account/fake-project/postboxes/victim-postbox';
 
 async function authenticate() {
   let res;
@@ -35,7 +35,7 @@ async function authenticate() {
     res = await fetch(`${BASE_URL}/api/authenticate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ deviceId: DEVICE_ID, deviceSecret: DEVICE_SECRET }),
+      body: JSON.stringify({ postboxId: POSTBOX_ID, postboxSecret: POSTBOX_SECRET }),
     });
   } catch (err) {
     throw new Error(`Network error connecting to ${BASE_URL}: ${err.message}${err.cause ? ` (cause: ${err.cause.message})` : ''}`);
@@ -46,7 +46,7 @@ async function authenticate() {
 }
 
 async function main() {
-  console.log(`Authenticating as: ${DEVICE_ID}`);
+  console.log(`Authenticating as: ${POSTBOX_ID}`);
   const { token, broker } = await authenticate();
   console.log(`Authenticated. Broker: ${broker}`);
   console.log(`Attempting to publish to fake topic: ${FAKE_TOPIC}`);
@@ -54,7 +54,7 @@ async function main() {
   const client = mqtt.connect(`mqtts://${broker}`, {
     port: 8883,
     clientId: `test-unauth-${Date.now()}`,
-    username: DEVICE_ID,
+    username: POSTBOX_ID,
     password: token,
     rejectUnauthorized: true,
     reconnectPeriod: 0,

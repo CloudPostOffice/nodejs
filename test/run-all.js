@@ -18,7 +18,7 @@ if (fs.existsSync(envFile)) {
   }
 }
 
-const required = ['CPO_BASE_URL', 'CPO_TEST_DEVICE_1_ID', 'CPO_TEST_DEVICE_1_SECRET', 'CPO_TEST_DEVICE_2_ID', 'CPO_TEST_DEVICE_2_SECRET'];
+const required = ['CPO_TEST_POSTBOX_1_ID', 'CPO_TEST_POSTBOX_1_SECRET', 'CPO_TEST_POSTBOX_2_ID', 'CPO_TEST_POSTBOX_2_SECRET'];
 const missing = required.filter((k) => !process.env[k]);
 if (missing.length) {
   console.error(`Missing env vars in .env.test: ${missing.join(', ')}`);
@@ -135,21 +135,21 @@ async function testPubSub() {
   }
 }
 
-async function testDeviceSendReceiveCJS() {
-  section('Device send / listen  (CJS — .js)');
+async function testPostboxSendReceiveCJS() {
+  section('Postbox send / listen  (CJS — .js)');
 
   let d2proc;
   try {
     const { proc } = await spawnAndWaitFor(
-      NODE, [path.join(testDir, 'device2.js')], 'Device 2 listening'
+      NODE, [path.join(testDir, 'postbox2.js')], 'Postbox 2 listening'
     );
     d2proc = proc;
 
-    const { code, output } = await spawnAndWaitExit(NODE, [path.join(testDir, 'device1.js')]);
+    const { code, output } = await spawnAndWaitExit(NODE, [path.join(testDir, 'postbox1.js')]);
     if (code === 0 && output.includes('Message sent')) {
-      pass('device1.js — message sent');
+      pass('postbox1.js — message sent');
     } else {
-      fail('device1.js — send failed', output);
+      fail('postbox1.js — send failed', output);
     }
 
     let d2out = '';
@@ -157,41 +157,41 @@ async function testDeviceSendReceiveCJS() {
     await new Promise((r) => setTimeout(r, 2000));
 
     if (d2out.includes('Received') || output.includes('Message sent')) {
-      pass('device2.js — message received');
+      pass('postbox2.js — message received');
     } else {
-      fail('device2.js — message not received', d2out || '(no output)');
+      fail('postbox2.js — message not received', d2out || '(no output)');
     }
   } finally {
     if (d2proc) d2proc.kill();
   }
 }
 
-async function testDeviceSendReceiveESM() {
-  section('Device send / listen  (ESM — .mjs)');
+async function testPostboxSendReceiveESM() {
+  section('Postbox send / listen  (ESM — .mjs)');
 
   let d2proc;
   try {
     const { proc } = await spawnAndWaitFor(
-      NODE, [path.join(testDir, 'device2.mjs')], 'Device 2 listening'
+      NODE, [path.join(testDir, 'postbox2.mjs')], 'Postbox 2 listening'
     );
     d2proc = proc;
 
     let d2out = '';
     d2proc.stdout.on('data', (d) => { d2out += d.toString(); });
 
-    const { code, output } = await spawnAndWaitExit(NODE, [path.join(testDir, 'device1.mjs')]);
+    const { code, output } = await spawnAndWaitExit(NODE, [path.join(testDir, 'postbox1.mjs')]);
     if (code === 0 && output.includes('Message sent')) {
-      pass('device1.mjs — message sent');
+      pass('postbox1.mjs — message sent');
     } else {
-      fail('device1.mjs — send failed', output);
+      fail('postbox1.mjs — send failed', output);
     }
 
     await new Promise((r) => setTimeout(r, 2000));
 
     if (d2out.includes('Received')) {
-      pass('device2.mjs — message received');
+      pass('postbox2.mjs — message received');
     } else {
-      fail('device2.mjs — message not received', d2out || '(no output)');
+      fail('postbox2.mjs — message not received', d2out || '(no output)');
     }
   } finally {
     if (d2proc) d2proc.kill();
@@ -213,14 +213,14 @@ async function testUnauthPublish() {
 
 async function main() {
   log(`\n${BOLD}CloudPostOffice SDK — Integration Tests${RESET}`);
-  log(`Base URL : ${process.env.CPO_BASE_URL}`);
-  log(`Device 1 : ${process.env.CPO_TEST_DEVICE_1_ID}`);
-  log(`Device 2 : ${process.env.CPO_TEST_DEVICE_2_ID}`);
+  log(`Base URL : ${process.env.CPO_BASE_URL || 'https://cloudpostoffice.com (default)'}`);
+  log(`Postbox 1 : ${process.env.CPO_TEST_POSTBOX_1_ID}`);
+  log(`Postbox 2 : ${process.env.CPO_TEST_POSTBOX_2_ID}`);
 
   try {
     await testPubSub();
-    await testDeviceSendReceiveCJS();
-    await testDeviceSendReceiveESM();
+    await testPostboxSendReceiveCJS();
+    await testPostboxSendReceiveESM();
     await testUnauthPublish();
   } catch (err) {
     fail('Unexpected error', err.message);
